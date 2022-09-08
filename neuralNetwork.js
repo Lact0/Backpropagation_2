@@ -44,7 +44,6 @@ class NeuralNetwork {
       this.weights.push(layer);
       this.biases.push(biasLayer);
     }
-    console.log(this.weights);
   }
 
   draw(x, y, w, h) {
@@ -85,14 +84,13 @@ class NeuralNetwork {
       }
       nextIn = newIn;
     }
-    
+
     return nextIn;
   }
 
   getGradient(inp, ans) {
-    const weightGradient = this.weights.map((x) => x);
-    const biasGradient = this.biases.map((x) => x);
-    
+    const weightGradient = JSON.parse(JSON.stringify(this.weights));
+    const biasGradient = JSON.parse(JSON.stringify(this.biases));
     const inputs = [inp];
     const outputs = [];
     for(let l = 0; l < this.weights.length; l++) {
@@ -112,20 +110,19 @@ class NeuralNetwork {
       inputs.push(newIn);
     }
     inputs.shift();
-
     let dInputs = inputs.map((x) => x);
     let dOutputs = outputs.map((x) => x);
-    
+
     const finalInd = outputs.length - 1;
-    
+
     //MAIN LOOP FOR BACKPROPOGATION
     for(let i = finalInd; i >= 0; i--) {
-      
+
       //TEST IF THIS IS THE FIRST CASE, FIND ERROR COST
       //GET DX/DY OF OUTPUT AND INPUT OF LAYER
       //ALSO GET THE BIASES
       for(let j = 0; j < dOutputs[i].length; j++) {
-        
+
         if(i == finalInd) {
           dOutputs[finalInd][j] = (2 * dOutputs[finalInd][j]) - (2 * ans[j]);
         } else {
@@ -139,7 +136,6 @@ class NeuralNetwork {
         }
         dInputs[i][j] = dOutputs[i][j] * this.actFunc[i].d(dInputs[i][j]);
       }
-      
       //GET DX/DY OF WEIGHTS
       //(weights behind the current layer)
       for(let j = 0; j < this.dim[i]; j++) {
@@ -147,14 +143,14 @@ class NeuralNetwork {
         if(i - 1 < 0) {
           numK = this.numIn;
         } else {
-          numK = this.weights[i - 1][j].length
+          numK = JSON.parse(this.weights[i - 1][j].length);
         }
         for(let k = 0; k < numK; k++) {
           weightGradient[i][j][k] = dInputs[i][j] * outputs[i][k];
         }
-      }  
+      }
     }
-    
+
     return [weightGradient, biasGradient];
   }
 }
