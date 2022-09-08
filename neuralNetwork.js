@@ -22,7 +22,7 @@ class NeuralNetwork {
   //a function is an array [func, dx/dy]
   constructor(numIn, dim, activationFunctions = []) {
     while(dim.length > activationFunctions.length) {
-      activationFunctions.push(sigmoid);
+      activationFunctions.push(relu);
     }
     this.numIn = numIn;
     this.dim = dim;
@@ -110,8 +110,8 @@ class NeuralNetwork {
       inputs.push(newIn);
     }
     inputs.shift();
-    let dInputs = inputs.map((x) => x);
-    let dOutputs = outputs.map((x) => x);
+    let dInputs = JSON.parse(JSON.stringify(inputs));
+    let dOutputs = JSON.parse(JSON.stringify(outputs));
 
     const finalInd = outputs.length - 1;
 
@@ -130,7 +130,7 @@ class NeuralNetwork {
           //Sum up layer afterwards
           for(let k = 0; k < dInputs[i + 1].length; k++) {
             //Sum is derivative of input * weight conn
-            sum += dInputs[i + 1][k] * this.weights[i + 1][k][j];
+            sum += dInputs[i + 1][k] * JSON.parse(JSON.stringify(this.weights[i + 1][k][j]));
           }
           dOutputs[i][j] = sum;
         }
@@ -140,17 +140,49 @@ class NeuralNetwork {
       //(weights behind the current layer)
       for(let j = 0; j < this.dim[i]; j++) {
         let numK;
+        let previousLayer;
         if(i - 1 < 0) {
           numK = this.numIn;
+          previousLayer = inp;
         } else {
-          numK = JSON.parse(this.weights[i - 1][j].length);
+          numK = JSON.parse(JSON.stringify(this.weights[i - 1][j].length));
+          previousLayer = outputs[i - 1]
         }
         for(let k = 0; k < numK; k++) {
-          weightGradient[i][j][k] = dInputs[i][j] * outputs[i][k];
+          weightGradient[i][j][k] = dInputs[i][j] * previousLayer[k];
         }
       }
     }
 
-    return [weightGradient, biasGradient];
+    return [weightGradient, dInputs];
+  }
+
+  //Inp is a 2d Array of all data
+  //Ans is also a 2d Array
+  trainBatch(inp, ans, lr) {
+    let first = this.getGradient(inp[0], ans[0]);
+    let fullWeightGradient = first[0];
+    let fullBiasGradient = first[1];
+    for(let i = 1; i < inp.length; i++) {
+      const gradient = this.getGradient(inp[i], ans[i]);
+      let weightGradient = gradient[0];
+      const biasGradient = gradient[1];
+      for(let x = 0; x < fullWeightGradient.length; x++) {
+        for(let y = 0; y < fullWeightGradient[x].length; y++) {
+          fullBiasGradient[x][y] += biasGradient[x][y];
+          for(let z = 0; z < fullWeightGradient[x][y].length; z++) {
+            fullWeightGradient[x][y][z] += weightGradient[x][y][z];
+          }
+        }
+      }
+    }
+    for(let i = 0; i < fullWeightGradient.length; i++) {
+      for(let j = 0; j < fullWeightGradient[i].length; j++) {
+        this.biases[i][j] -= fullBiasGradient[i][j] / inp.length * lr;
+        for(let k = 0; k < fullWeightGradient[i][j].length; k++) {
+          this.weights[i][j][k] -= fullWeightGradient[i][j][k] / inp.length * lr;
+        }
+      }
+    }
   }
 }

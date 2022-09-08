@@ -2,7 +2,10 @@ window.onresize = changeWindow;
 let points = [];
 let types = ['yellow', 'blue'];
 let net = new NeuralNetwork(1, [5, 5, 1], []);
-let f = (x) => 90 * Math.cos(15 * x) + height / 2;
+let f = (x) => 150 * Math.cos(5 * x) + height / 2;
+let inp = [];
+let ans = [];
+let run = false;
 
 function load() {
   canvas = document.querySelector('.canvas');
@@ -24,8 +27,29 @@ function load() {
     ctx.strokeStyle = 'white'
     ctx.strokeRect(i, j, 1, 1);
     ctx.strokeRect(i, netJ, 1, 1);
+    inp.push([i / width]);
+    ans.push([j / height]);
   }
-  console.log(net.getGradient([0], [1]));
+}
+
+function train() {
+  net.trainBatch(inp, ans, .01);
+  drawNet();
+  if(!run) {
+    return;
+  }
+  requestAnimationFrame(train);
+}
+
+function drawNet() {
+  ctx.clearRect(0, 0, width, height);
+  for(let i = 0; i < width; i++) {
+    const j = f(i / width);
+    const netJ = net.pass([i / width])[0] * height;
+    ctx.strokeStyle = 'white'
+    ctx.strokeRect(i, j, .1, .1);
+    ctx.strokeRect(i, netJ, .1, .1);
+  }
 }
 
 function drawPoints() {
@@ -51,6 +75,10 @@ function changeWindow() {
 
 function keyPress(key) {
   if(key.keyCode == 32) {
+    run = !run;
+    if(run) {
+      train();
+    }
   }
 }
 
