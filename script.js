@@ -1,7 +1,7 @@
 window.onresize = changeWindow;
 let points = [];
 let types = ['yellow', 'blue'];
-let net = new NeuralNetwork(1, [5, 5, 1], []);
+let net = new NeuralNetwork(1, [10, 10, 1], []);
 let f = (x) => 150 * Math.cos(5 * x) + height / 2;
 let inp = [];
 let ans = [];
@@ -19,8 +19,6 @@ function load() {
                    type: rand(0, 1)};
     points.push(point);
   }
-  //drawPoints();
-  //net.draw(0, 0, width, height);
   for(let i = 0; i < width; i++) {
     const j = f(i / width);
     const netJ = net.pass([i / width])[0] * height;
@@ -33,7 +31,7 @@ function load() {
 }
 
 function train() {
-  net.trainBatch(inp, ans, .01);
+  net.trainBatch(inp, ans, .1);
   drawNet();
   if(!run) {
     return;
@@ -48,7 +46,7 @@ function drawNet() {
     const netJ = net.pass([i / width])[0] * height;
     ctx.strokeStyle = 'white'
     ctx.strokeRect(i, j, .1, .1);
-    ctx.strokeRect(i, netJ, .1, .1);
+    ctx.strokeRect(i, netJ, 2, 2);
   }
 }
 

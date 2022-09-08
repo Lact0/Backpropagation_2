@@ -5,13 +5,7 @@ const sigmoid = {
 };
 const relu = {
   f: z => max(0, z),
-  d: z => {
-    if(z < 0) {
-      return 0;
-    } else {
-      return 1;
-    }
-  }
+  d: z => z < 0? 0:1
 };
 
 class NeuralNetwork {
@@ -110,6 +104,7 @@ class NeuralNetwork {
       inputs.push(newIn);
     }
     inputs.shift();
+    
     let dInputs = JSON.parse(JSON.stringify(inputs));
     let dOutputs = JSON.parse(JSON.stringify(outputs));
 
@@ -124,17 +119,17 @@ class NeuralNetwork {
       for(let j = 0; j < dOutputs[i].length; j++) {
 
         if(i == finalInd) {
-          dOutputs[finalInd][j] = (2 * dOutputs[finalInd][j]) - (2 * ans[j]);
+          dOutputs[finalInd][j] = -2 * (ans[j] - outputs[finalInd][j]);
         } else {
           let sum = 0;
           //Sum up layer afterwards
           for(let k = 0; k < dInputs[i + 1].length; k++) {
             //Sum is derivative of input * weight conn
-            sum += dInputs[i + 1][k] * JSON.parse(JSON.stringify(this.weights[i + 1][k][j]));
+            sum += dInputs[i + 1][k] * this.weights[i + 1][k][j];
           }
           dOutputs[i][j] = sum;
         }
-        dInputs[i][j] = dOutputs[i][j] * this.actFunc[i].d(dInputs[i][j]);
+        dInputs[i][j] = dOutputs[i][j] * this.actFunc[i].d(inputs[i][j]);
       }
       //GET DX/DY OF WEIGHTS
       //(weights behind the current layer)
@@ -146,7 +141,7 @@ class NeuralNetwork {
           previousLayer = inp;
         } else {
           numK = JSON.parse(JSON.stringify(this.weights[i - 1][j].length));
-          previousLayer = outputs[i - 1]
+          previousLayer = outputs[i - 1];
         }
         for(let k = 0; k < numK; k++) {
           weightGradient[i][j][k] = dInputs[i][j] * previousLayer[k];
@@ -180,6 +175,7 @@ class NeuralNetwork {
       for(let j = 0; j < fullWeightGradient[i].length; j++) {
         this.biases[i][j] -= fullBiasGradient[i][j] / inp.length * lr;
         for(let k = 0; k < fullWeightGradient[i][j].length; k++) {
+          let oldWeight = this.weights[i][j][k];
           this.weights[i][j][k] -= fullWeightGradient[i][j][k] / inp.length * lr;
         }
       }
