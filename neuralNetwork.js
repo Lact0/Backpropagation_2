@@ -127,9 +127,11 @@ class NeuralNetwork {
             sum += inputs[i + 1][k] * this.weights[i + 1][k][j];
           }
           outputs[i][j] = sum;
-          //NOT SURE IF THIS IS CORRECT
-          inputs[i][j] = sum * this.actFunc[i].d(inputs[i][j]);
         }
+      }
+      
+      for(let j = 0; j < outputs[i].length; j++) {
+        inputs[i][j] = outputs[i][j] * this.actFunc[i].d(inputs[i][j]);
       }
 
       let previousOutputs;

@@ -1,7 +1,7 @@
 window.onresize = changeWindow;
-let net = new NeuralNetwork(1, [5, 1], [relu, relu]);
-let f = (x) => Math.pow(x, 2);
-//.25 * Math.cos(10 * x) + .5;
+let net = new NeuralNetwork(1, [5, 5, 1], []);
+let f = (x) => .25 * Math.cos(20 * x) + .5;
+//Math.pow(x, 2);
 let inp = [];
 let ans = [];
 let run = false;
@@ -19,13 +19,18 @@ function load() {
     ctx.strokeRect(i, j * height, 1, 1);
     ctx.strokeStyle = 'white';
     ctx.strokeRect(i, netJ * height, 1, 1);
-    inp.push([i / width]);
-    ans.push([j]);
+    if(i % 5 == 0) {
+      inp.push([i / width]);
+      ans.push([j]);
+    }
   }
 }
 
 function train() {
-  net.trainBatch(inp, ans, .1);
+  //net.trainBatch(inp, ans, .5);
+  for(let i = 0; i < inp.length; i++) {
+    net.trainBatch([inp[i]], [ans[i]], .1);
+  }
   drawNet();
   if(!run) {
     return;
