@@ -85,71 +85,69 @@ class NeuralNetwork {
   getGradient(inp, ans) {
     const weightGradient = JSON.parse(JSON.stringify(this.weights));
     const biasGradient = JSON.parse(JSON.stringify(this.biases));
-    const inputs = [inp];
-    const outputs = [];
-    for(let l = 0; l < this.weights.length; l++) {
-      const layer = this.weights[l];
-      let newIn = [];
-      const newOut = [];
-      for(let j = 0; j < layer.length; j++) {
-        const node = layer[j];
-        let sum = this.biases[l][j];
-        for(let i = 0; i < node.length; i++) {
-          sum += node[i] * inputs[inputs.length - 1][i];
-        }
-        newOut.push(sum);
-        newIn.push(this.actFunc[l].f(sum));
-      }
-      outputs.push(newOut);
-      inputs.push(newIn);
-    }
-    inputs.shift();
+    let inputs = [];
+    let outputs = [];
     
-    let dInputs = JSON.parse(JSON.stringify(inputs));
-    let dOutputs = JSON.parse(JSON.stringify(outputs));
+    let nextIn = inp;
+    for(let i = 0; i < this.weights.length; i++) {
+      const temp = [];
+      let inpTemp = [];
+      let outTemp = [];
+      for(let j = 0; j < this.weights[i].length; j++) {
+        let sum = this.biases[i][j];
+        for(let k = 0; k < this.weights[i][j].length; k++) {
+          sum += this.weights[i][j][k] * nextIn[k];
+        }
+        let out = this.actFunc[i].f(sum);
+        inpTemp.push(sum);
+        temp.push(out);
+        outTemp.push(out);
+      }
+      nextIn = temp;
+      inputs.push(inpTemp);
+      outputs.push(outTemp);
+    }
+    const predicted = nextIn;
 
     const finalInd = outputs.length - 1;
-
-    //MAIN LOOP FOR BACKPROPOGATION
-    for(let i = finalInd; i >= 0; i--) {
-
-      //TEST IF THIS IS THE FIRST CASE, FIND ERROR COST
-      //GET DX/DY OF OUTPUT AND INPUT OF LAYER
-      //ALSO GET THE BIASES
-      for(let j = 0; j < dOutputs[i].length; j++) {
-
-        if(i == finalInd) {
-          dOutputs[finalInd][j] = -2 * (ans[j] - outputs[finalInd][j]);
-        } else {
-          let sum = 0;
-          //Sum up layer afterwards
-          for(let k = 0; k < dInputs[i + 1].length; k++) {
-            //Sum is derivative of input * weight conn
-            sum += dInputs[i + 1][k] * this.weights[i + 1][k][j];
-          }
-          dOutputs[i][j] = sum;
-        }
-        dInputs[i][j] = dOutputs[i][j] * this.actFunc[i].d(inputs[i][j]);
-      }
-      //GET DX/DY OF WEIGHTS
-      //(weights behind the current layer)
-      for(let j = 0; j < this.dim[i]; j++) {
-        let numK;
-        let previousLayer;
-        if(i - 1 < 0) {
-          numK = this.numIn;
-          previousLayer = inp;
-        } else {
-          numK = JSON.parse(JSON.stringify(this.weights[i - 1][j].length));
-          previousLayer = outputs[i - 1];
-        }
-        for(let k = 0; k < numK; k++) {
-          weightGradient[i][j][k] = dInputs[i][j] * previousLayer[k];
-        }
-      }
+    for(let i = 0; i < outputs[finalInd].length; i++) {
+      outputs[finalInd][i] = -2 * (ans[i] - predicted[i]);
     }
+    
+    for(let i = finalInd; i >= 0; i--) {
+      //Set output derivative if it's not the first one
+      if(i != finalInd) {
+        //Go through the outputs of the layer
+        for(let j = 0; j < outputs[i].length; j++) {
+          //Add up the inputs of the layer in front
+          let sum = 0;
+          for(let k = 0; k < inputs[i + 1].length; k++) {
+            //input in front * Weight that connects inp (k) to current node (j)
+            sum += inputs[i + 1][k] * this.weights[i + 1][k][j];
+          }
+          outputs[i][j] = sum;
+          //NOT SURE IF THIS IS CORRECT     
+          inputs[i][j] = sum * this.actFunc[i].d(inputs[i][j]);
+        }
+      }
 
-    return [weightGradient, dInputs];
+      let previousOutputs;
+      if(i == 0) {
+        previousOutputs = inp;
+      } else {
+        previousOutputs = outputs[i - 1];
+      }
+      //For each node in layer
+      for(let j = 0; j < this.weights[i].length; j++) {
+        //Go through each weight and find the derivative
+        for(let k = 0; k < this.weights[i][j].length; k++) {
+          //i = Layer   j = Node in layer   k = Node in previous Layer
+          weightGradient[i][j][k] = inputs[i][j] * previousOutputs[k];
+        }
+      }
+      
+    }
+    return [weightGradient, inputs];
   }
 
   //Inp is a 2d Array of all data
@@ -158,6 +156,7 @@ class NeuralNetwork {
     let first = this.getGradient(inp[0], ans[0]);
     let fullWeightGradient = first[0];
     let fullBiasGradient = first[1];
+    //console.log(first);
     for(let i = 1; i < inp.length; i++) {
       const gradient = this.getGradient(inp[i], ans[i]);
       let weightGradient = gradient[0];

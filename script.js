@@ -1,7 +1,7 @@
 window.onresize = changeWindow;
 let points = [];
 let types = ['yellow', 'blue'];
-let net = new NeuralNetwork(1, [10, 10, 1], []);
+let net = new NeuralNetwork(1, [5, 5, 1], []);
 let f = (x) => 150 * Math.cos(5 * x) + height / 2;
 let inp = [];
 let ans = [];
