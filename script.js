@@ -1,8 +1,7 @@
 window.onresize = changeWindow;
-let points = [];
-let types = ['yellow', 'blue'];
-let net = new NeuralNetwork(1, [5, 5, 1], []);
-let f = (x) => 150 * Math.cos(5 * x) + height / 2;
+let net = new NeuralNetwork(1, [5, 1], [relu, relu]);
+let f = (x) => Math.pow(x, 2);
+//.25 * Math.cos(10 * x) + .5;
 let inp = [];
 let ans = [];
 let run = false;
@@ -13,20 +12,15 @@ function load() {
   canvas.width = width;
   canvas.height = height;
   document.onkeydown = keyPress;
-  for(let i = 0; i < 1000; i++) {
-    const point = {x: rand(0, width - 1),
-                   y: rand(0, height - 1),
-                   type: rand(0, 1)};
-    points.push(point);
-  }
   for(let i = 0; i < width; i++) {
     const j = f(i / width);
-    const netJ = net.pass([i / width])[0] * height;
-    ctx.strokeStyle = 'white'
-    ctx.strokeRect(i, j, 1, 1);
-    ctx.strokeRect(i, netJ, 1, 1);
+    const netJ = net.pass([i / width])[0];
+    ctx.strokeStyle = 'green'
+    ctx.strokeRect(i, j * height, 1, 1);
+    ctx.strokeStyle = 'white';
+    ctx.strokeRect(i, netJ * height, 1, 1);
     inp.push([i / width]);
-    ans.push([j / height]);
+    ans.push([j]);
   }
 }
 
@@ -43,10 +37,11 @@ function drawNet() {
   ctx.clearRect(0, 0, width, height);
   for(let i = 0; i < width; i++) {
     const j = f(i / width);
-    const netJ = net.pass([i / width])[0] * height;
-    ctx.strokeStyle = 'white'
-    ctx.strokeRect(i, j, .1, .1);
-    ctx.strokeRect(i, netJ, 2, 2);
+    const netJ = net.pass([i / width])[0];
+    ctx.strokeStyle = 'green'
+    ctx.strokeRect(i, j * height, 1, 1);
+    ctx.strokeStyle = 'white';
+    ctx.strokeRect(i, netJ * height, 1, 1);
   }
 }
 

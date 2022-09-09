@@ -16,7 +16,7 @@ class NeuralNetwork {
   //a function is an array [func, dx/dy]
   constructor(numIn, dim, activationFunctions = []) {
     while(dim.length > activationFunctions.length) {
-      activationFunctions.push(relu);
+      activationFunctions.push(sigmoid);
     }
     this.numIn = numIn;
     this.dim = dim;
@@ -87,8 +87,9 @@ class NeuralNetwork {
     const biasGradient = JSON.parse(JSON.stringify(this.biases));
     let inputs = [];
     let outputs = [];
-    
+
     let nextIn = inp;
+    //Pass the input
     for(let i = 0; i < this.weights.length; i++) {
       const temp = [];
       let inpTemp = [];
@@ -113,7 +114,7 @@ class NeuralNetwork {
     for(let i = 0; i < outputs[finalInd].length; i++) {
       outputs[finalInd][i] = -2 * (ans[i] - predicted[i]);
     }
-    
+
     for(let i = finalInd; i >= 0; i--) {
       //Set output derivative if it's not the first one
       if(i != finalInd) {
@@ -126,7 +127,7 @@ class NeuralNetwork {
             sum += inputs[i + 1][k] * this.weights[i + 1][k][j];
           }
           outputs[i][j] = sum;
-          //NOT SURE IF THIS IS CORRECT     
+          //NOT SURE IF THIS IS CORRECT
           inputs[i][j] = sum * this.actFunc[i].d(inputs[i][j]);
         }
       }
@@ -145,7 +146,7 @@ class NeuralNetwork {
           weightGradient[i][j][k] = inputs[i][j] * previousOutputs[k];
         }
       }
-      
+
     }
     return [weightGradient, inputs];
   }
